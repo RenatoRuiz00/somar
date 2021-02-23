@@ -1,0 +1,165 @@
+﻿@page "/doadnovos/index"
+@inject HttpClient  http
+
+<div class="card" style="width: 18rem;">
+    <div class="card-body">
+        <div class="row">
+            <div class="col">
+                <div class="row">Telefone:</div>
+                <div class="row">(14) 99907-2400</div>
+            </div>
+            <div class="col">
+                <div class="row">Retorno:</div>
+                <div class="row">23/02/21 09:00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form>
+    <div class="form-row">
+        <div class="col">
+            <label>Nome</label>
+            <input type="text" class="form-control" />
+        </div>
+
+        <div class="col-xl-2">
+            <label>Data Nasc.</label>
+            <input class="form-control" type="date" />
+        </div>
+
+        <div class="col-xl-2">
+            <label>Tipo</label>
+            <select class="form-control">
+                <option>Masculino</option>
+                <option>Feminino</option>
+                <option>Empresa</option>
+            </select>
+        </div>
+
+        <div class="col-xl-2">
+            <label>CPF</label>
+            <input type="text" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="col">
+            <label>Endereço</label>
+            <input type="text" class="form-control" />
+        </div>
+
+        <div class="col-xl-1">
+            <label>Núm.</label>
+            <input type="text" class="form-control" />
+        </div>
+
+        <div class="col-xl-2">
+            <label>Cep</label>
+            <input type="text" class="form-control" />
+        </div>
+
+        <div class="col">
+            <label>Bairro</label>
+            <input type="text" class="form-control" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="col">
+            <label>Ponto Referência</label>
+            <input type="text" class="form-control" />
+        </div>
+
+        <div class="col">
+            <label>Complemento</label>
+            <input type="text" class="form-control" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="col">
+            <label>Cidade</label>
+            <select class="form-control">
+                @if (cidades != null)
+                {
+                    @foreach (Cidade cidade in cidades)
+                    {
+                        <option>@cidade.Nome</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col">
+            <label>Celular 1</label>
+            <input type="text" class="form-control" />
+        </div>
+
+        <div class="col">
+            <label>Celular 2</label>
+            <input type="text" class="form-control" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="col">
+            <label>Email</label>
+            <input type="text" class="form-control" />
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="col">
+            <label>Obs. Coordenação</label>
+            <textarea class="form-control" bind-value="@doador.ObsCoordenacao"></textarea>
+        </div>
+        <div class="col">
+            <label>Obs. Operação</label>
+            <textarea class="form-control" bind-value="@doador.ObsOperacao"></textarea>
+        </div>
+        <div class="col">
+            <label>Obs. Mensageiros</label>
+            <textarea class="form-control" bind-value="@doador.ObsMensageiros"></textarea>
+        </div>
+    </div>
+</form>
+
+@erro
+
+@code{
+    DoadorNovo doador = new DoadorNovo();
+    List<Cidade> cidades;
+    string erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await BuscarCidades();
+    }
+
+    async Task BuscarCidades()
+    {
+        try
+        {
+            var httpResponse = await http.GetAsync("api/cidade/getcidades/");
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+
+                cidades = JsonSerializer.Deserialize<List<Cidade>>(responseString,
+                    new JsonSerializerOptions()
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            erro += ex.Message;
+        }
+    }
+
+    async Task Submit()
+    {
+
+    }
+}

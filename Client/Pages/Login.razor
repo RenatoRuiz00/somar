@@ -1,0 +1,105 @@
+﻿@page "/login"
+@layout EmptyLayout
+@inject HttpClient  http
+@inject NavigationManager navigation
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+@if (!string.IsNullOrEmpty(erro))
+{
+    <div class="alert alert-danger" role="alert">
+        @erro
+    </div>
+}
+
+<EditForm Model="funcionario" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+    <div class="card">
+        <div class="card-header text-center">
+            Entrar
+        </div>
+        <div class="card-body">
+
+            <div class="form-group">
+                <label form="usuario">Usuário: </label>
+                <div>
+                    <InputText @bind-Value="@funcionario.Usuario" class="form-control" />
+                    <ValidationMessage For="@(()=> funcionario.Usuario)" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label form="senha">Senha: </label>
+                <div>
+                    <InputText type="password" @bind-Value="@funcionario.Senha" class="form-control" />
+                    <ValidationMessage For="@(()=> funcionario.Senha)" />
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card-footer">
+            <button class="btn btn-success" type="submit">Entrar</button>
+        </div>
+    </div>
+</EditForm>
+
+
+
+@code {
+    Funcionario funcionario = new Funcionario();
+    string erro;
+
+    async Task Submit()
+    {
+        try
+        {
+            erro = "";
+            var loginAsJson = JsonSerializer.Serialize(funcionario);
+
+            var httpResponse = await http.PostAsync("api/login/login",
+                     new StringContent(loginAsJson, Encoding.UTF8, "application/json"));
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseAsString = await httpResponse.Content.ReadAsStringAsync();
+
+                var loginResult = JsonSerializer.Deserialize<Funcionario>(responseAsString,
+                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+
+                //CreateCookie("email", user.Email, 1);
+                await localStorage.SetItemAsync<Funcionario>("user", loginResult);
+
+                navigation.NavigateTo("/");
+            }
+            else
+            {
+                //loginFalhou = true;
+                erro = $"Não foi possível realizar o Login do usuário.(Erro: {httpResponse.StatusCode})";
+            }
+        }
+        catch (Exception)
+        {
+            //loginFalhou = true;
+            erro = "Não foi possível realizar o Login do Usuário...";
+        }
+
+
+
+
+    }
+
+}
+
+
+<style>
+    BODY {
+        background-color: #e1e1e1;
+    }
+
+    .card {
+        width: 400px;
+        display: block;
+        margin: auto;
+    }
+</style>

@@ -1,0 +1,128 @@
+﻿@page "/doadnovos/campanhadiscadora"
+@inject HttpClient  http
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager navigation
+
+<h3>Campanha</h3>
+<hr />
+
+@if (!string.IsNullOrEmpty(erro))
+{
+    <div class="alert alert-danger" role="alert">
+        @erro
+    </div>
+}
+
+@if (CampanhasDiscadora != null)
+{
+    <div class="card">
+        <div class="card-body">
+            <form>
+                <div class="form-row">
+                    <div class="col">
+                        <label>Selecione a campanha:</label>
+                        <select class="form-control" @bind="idCampanha">
+                            @foreach (AgentCampaign campanha in CampanhasDiscadora.Data)
+                            {
+                                <option value="@campanha.Id">@campanha.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" id="rowBotao">
+                    <div class="col">
+                        <button class="btn btn-primary float-right" type="button" @onclick="SalvarCampanha">Entrar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@code {
+    ListCampaignAgents CampanhasDiscadora;
+    string erro;
+    int idCampanha;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarCampanhasDiscadora();
+    }
+
+    async Task ListarCampanhasDiscadora()
+    {
+        try
+        {
+            var httpResponse =
+            await http.GetAsync("https://3c.fluxoti.com/api/v1/agent/campaigns?api_token=Fk4VmPthEK0E0oWbcG7o2ZUnC9GSe6sIRcBhAwDkmBwExYn9keWXiT7uHhqV");
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseString = await httpResponse.Content.ReadAsStringAsync();
+
+                CampanhasDiscadora = JsonSerializer.Deserialize<ListCampaignAgents>(responseString,
+                    new JsonSerializerOptions()
+                    {
+                        PropertyNameCaseInsensitive = true,
+
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            erro = "Erro: " + ex.Message;
+        }
+    }
+
+    async Task EntrarCampanha()
+    {
+        try
+        {
+            erro = "";
+            string parametros = "{\"campaign\":5247}";
+
+            var httpResponse = await http.PostAsync("https://3c.fluxoti.com/api/v1/agent/webphone/login?api_token=E78vEeXIZaKJ52oL5Fh8xUQXB4isfxfgWpMJ3vAmHUGUch0sMsPT5bhztHmm",
+                     new StringContent(parametros, Encoding.UTF8, "application/json"));
+
+            if (httpResponse.IsSuccessStatusCode)
+            {
+                var responseAsString = await httpResponse.Content.ReadAsStringAsync();
+
+                //var loginResult = JsonSerializer.Deserialize<Funcionario>(responseAsString,
+               //      new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+
+                //CreateCookie("email", user.Email, 1);
+                //await localStorage.SetItemAsync<Funcionario>("user", loginResult);
+
+                navigation.NavigateTo("/doadnovos/index");
+            }
+            else
+            {
+                erro = $"Não foi possível entrar na campanha.(Erro: {httpResponse.StatusCode})";
+            }
+        }
+        catch (Exception)
+        {
+            erro = "Não foi possível entrar na campanha!";
+        }
+    }
+
+    async Task SalvarCampanha()
+    {
+        await localStorage.SetItemAsync<int>("idCampanha", idCampanha);
+        await EntrarCampanha();
+        //navigation.NavigateTo("/");
+        
+    }
+}
+
+<style>
+    .card {
+        width: 400px;
+    }
+
+    #rowBotao {
+        margin-top: 20px;
+    }
+</style>

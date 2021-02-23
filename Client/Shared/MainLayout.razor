@@ -1,0 +1,33 @@
+﻿@inherits LayoutComponentBase
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            <span>Olá @usuario</span>
+            <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code{
+    string usuario="";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await localStorage.GetItemAsync<Funcionario>("user");
+        if (user != null)
+        {
+            usuario = user.Usuario;
+        }
+
+    }
+}
